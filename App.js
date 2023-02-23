@@ -1,17 +1,18 @@
 import { createAppContainer } from "react-navigation";
 import { createStackNavigator } from "react-navigation-stack";
 import HomeScreen from "./src/screens/HomeScreen";
-import SavedJokes from "./src/screens/SavedJokes";
+import SavedJokesScreen from "./src/screens/SavedJokesScreen";
+import { JokeProvider } from "./src/context/JokeContext";
 
 const navigator = createStackNavigator(
   {
     Home: HomeScreen,
-    Saved: SavedJokes,
+    Saved: SavedJokesScreen,
   },
   {
     initialRouteName: "Home",
     defaultNavigationOptions: {
-      title: "Joke List",
+      title: "Jokes",
     },
   }
 );

@@ -7,16 +7,18 @@ import {
   TouchableOpacity,
 } from "react-native";
 import jokeapi from "../api/jokeapi";
-import { CheckBox } from "react-native-elements";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Icon } from "react-native-vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import SavedJokesScreen from "./SavedJokesScreen";
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const [jokes, setJokes] = useState([]);
+  const [savedJokes, setSavedJokes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
   useEffect(() => {
     jokeApi();
+    getSavedJokes();
   }, []);
 
   const jokeApi = async () => {
@@ -46,23 +48,53 @@ const HomeScreen = () => {
     selectedCategories.includes(joke.category)
   );
 
-  const LoveButton = () => {
-    const [isLoved, setIsLoved] = useState(false);
+  // Function to retrieve saved jokes from AsyncStorage on app start
+  const getSavedJokes = async () => {
+    try {
+      const jokes = await AsyncStorage.getItem("savedJokes");
+      if (jokes !== null) {
+        setSavedJokes(JSON.parse(jokes));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
+  // Function to save a joke to AsyncStorage
+  const saveJoke = async (joke) => {
+    try {
+      const newSavedJokes = [...savedJokes, joke];
+      await AsyncStorage.setItem("savedJokes", JSON.stringify(newSavedJokes));
+      setSavedJokes(newSavedJokes);
+      console.log("Joke saved successfully!");
+      console.log(savedJokes);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Function to render a single saved joke
+  const renderSavedJoke = ({ item }) => {
     return (
-      <TouchableOpacity
-        style={{ alignSelf: "flex-end" }}
-        onPress={() => setIsLoved(!isLoved)}
-      >
-        <MaterialIcons name="favorite-border" size={24} color="black" />
-      </TouchableOpacity>
+      <View style={styles.jokesContainer}>
+        <Text style={styles.category}>Category : {item.category}</Text>
+        <Text style={styles.joke}>Setup : {item.setup}</Text>
+        <Text style={styles.joke}>Delivery : {item.delivery}</Text>
+        <Text style={styles.joke}>ID : {item.id}</Text>
+        <Text style={styles.joke}>Type : {item.type}</Text>
+      </View>
     );
   };
 
   const renderJoke = ({ item }) => {
     return (
       <View style={styles.jokesContainer}>
-        <LoveButton />
+        <TouchableOpacity
+          style={{ alignSelf: "flex-end" }}
+          onPress={() => saveJoke(item)}
+        >
+          <MaterialIcons name="favorite-border" size={24} color="black" />
+        </TouchableOpacity>
         <>
           <Text style={styles.category}>Category : {item.category}</Text>
           <Text style={styles.joke}>Setup : {item.setup}</Text>
@@ -91,6 +123,9 @@ const HomeScreen = () => {
               textDecorationLine: selectedCategories.includes("Programming")
                 ? "underline"
                 : "none",
+              backgroundColor: selectedCategories.includes("Programming")
+                ? "grey"
+                : "transparent",
               paddingLeft: 5,
               fontSize: 18,
             }}
@@ -104,6 +139,9 @@ const HomeScreen = () => {
               textDecorationLine: selectedCategories.includes("Misc")
                 ? "underline"
                 : "none",
+              backgroundColor: selectedCategories.includes("Misc")
+                ? "grey"
+                : "transparent",
               fontSize: 18,
             }}
           >
@@ -116,6 +154,9 @@ const HomeScreen = () => {
               textDecorationLine: selectedCategories.includes("Dark")
                 ? "underline"
                 : "none",
+              backgroundColor: selectedCategories.includes("Dark")
+                ? "grey"
+                : "transparent",
               paddingRight: 5,
               fontSize: 18,
             }}
@@ -124,9 +165,17 @@ const HomeScreen = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      <Text>Random Jokes</Text>
       <FlatList
         data={filteredJokes}
         renderItem={renderJoke}
+        keyExtractor={(item, index) => index.toString()}
+      />
+      <Text>Saved Jokes</Text>
+      <FlatList
+        style={{ marginTop: 20 }}
+        data={savedJokes}
+        renderItem={renderSavedJoke}
         keyExtractor={(item, index) => index.toString()}
       />
     </View>
@@ -135,10 +184,10 @@ const HomeScreen = () => {
 
 HomeScreen.navigationOptions = ({ navigation }) => {
   return {
-    headerRight: (
+    headerRight: () => (
       <TouchableOpacity
         style={{ paddingRight: 8 }}
-        onPress={() => navigation.navigate("Saved")}
+        onPress={() => navigation.navigate("Saved", { savedJokes })}
       >
         <MaterialIcons name="favorite" size={24} color="black" />
       </TouchableOpacity>
