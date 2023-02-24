@@ -8,8 +8,15 @@ import {
 } from "react-native";
 import jokeapi from "../api/jokeapi";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
+import { EvilIcons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SavedJokesScreen from "./SavedJokesScreen";
+import AddJokeForm from "../components/AddJokeForm";
+import EditJokeForm from "../components/EditJokeForm";
+import { createStackNavigator } from "@react-navigation/stack";
+import { NavigationContainer } from "@react-navigation/native";
 
 const HomeScreen = ({ navigation }) => {
   const [jokes, setJokes] = useState([]);
@@ -18,7 +25,7 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     jokeApi();
-    getSavedJokes();
+    //getSavedJokes();
   }, []);
 
   const jokeApi = async () => {
@@ -73,10 +80,42 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  const handleAddJoke = (joke) => {
+    setSavedJokes([...savedJokes, joke]);
+    console.log(savedJokes);
+  };
+
+  const handleDelete = (setup) => {
+    setSavedJokes(savedJokes.filter((joke) => joke.setup !== setup));
+  };
+
+  const handleEdit = (setup) => {
+    // Find the index of the joke in your state or database array
+    const jokeIndex = jokes.findIndex((joke) => joke.setup === setup);
+
+    // Get the joke object at that index
+    const jokeToEdit = jokes[jokeIndex];
+
+    // Navigate to the edit joke screen and pass the joke data as props
+    navigation.navigate("Edit", { joke: jokeToEdit, jokeIndex });
+  };
+
   // Function to render a single saved joke
   const renderSavedJoke = ({ item }) => {
     return (
       <View style={styles.jokesContainer}>
+        <TouchableOpacity
+          style={{ alignSelf: "flex-end" }}
+          onPress={() => handleDelete(item.setup)}
+        >
+          <EvilIcons name="trash" size={24} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ alignSelf: "flex-start" }}
+          onPress={() => handleEdit(item.setup)}
+        >
+          <AntDesign name="edit" size={24} color="black" />
+        </TouchableOpacity>
         <Text style={styles.category}>Category : {item.category}</Text>
         <Text style={styles.joke}>Setup : {item.setup}</Text>
         <Text style={styles.joke}>Delivery : {item.delivery}</Text>
@@ -178,6 +217,19 @@ const HomeScreen = ({ navigation }) => {
         renderItem={renderSavedJoke}
         keyExtractor={(item, index) => index.toString()}
       />
+      <AddJokeForm onAddJoke={handleAddJoke} />
+
+      {/* <FlatList
+        data={savedJokes}
+        renderItem={({ item }) => (
+          <JokeItem
+            category={item.category}
+            setup={item.setup}
+            punchline={item.category}
+          />
+        )}
+        keyExtractor={(item, index) => index.toString()}
+      /> */}
     </View>
   );
 };
@@ -190,6 +242,14 @@ HomeScreen.navigationOptions = ({ navigation }) => {
         onPress={() => navigation.navigate("Saved", { savedJokes })}
       >
         <MaterialIcons name="favorite" size={24} color="black" />
+      </TouchableOpacity>
+    ),
+    headerLeft: () => (
+      <TouchableOpacity
+        style={{ paddingRight: 28 }}
+        onPress={() => navigation.navigate("Create")}
+      >
+        <Feather name="plus" size={24} color="black" />
       </TouchableOpacity>
     ),
   };
