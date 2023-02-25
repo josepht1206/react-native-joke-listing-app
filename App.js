@@ -6,6 +6,7 @@ import SavedJokesScreen from "./src/screens/SavedJokesScreen";
 import CreateScreen from "./src/screens/CreateScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import EditJokeScreen from "./src/screens/EditJokeScreen";
+import AddJokeForm from "./src/components/AddJokeForm";
 
 const navigator = createStackNavigator(
   {

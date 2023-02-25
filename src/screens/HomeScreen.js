@@ -5,6 +5,8 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  TextInput,
+  Button,
 } from "react-native";
 import jokeapi from "../api/jokeapi";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,15 +19,20 @@ import AddJokeForm from "../components/AddJokeForm";
 import EditJokeForm from "../components/EditJokeForm";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
+import CreateScreen from "./CreateScreen";
 
 const HomeScreen = ({ navigation }) => {
   const [jokes, setJokes] = useState([]);
   const [savedJokes, setSavedJokes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [editingJoke, setEditingJoke] = useState(null);
+  const [newCategory, setNewCategory] = useState("");
+  const [newSetup, setNewSetup] = useState("");
+  const [newDelivery, setNewDelivery] = useState("");
 
   useEffect(() => {
     jokeApi();
-    //getSavedJokes();
+    getSavedJokes();
   }, []);
 
   const jokeApi = async () => {
@@ -83,21 +90,41 @@ const HomeScreen = ({ navigation }) => {
   const handleAddJoke = (joke) => {
     setSavedJokes([...savedJokes, joke]);
     console.log(savedJokes);
+    saveJoke(joke);
   };
 
-  const handleDelete = (setup) => {
+  const handleDelete = async (setup) => {
     setSavedJokes(savedJokes.filter((joke) => joke.setup !== setup));
   };
 
   const handleEdit = (setup) => {
-    // Find the index of the joke in your state or database array
-    const jokeIndex = jokes.findIndex((joke) => joke.setup === setup);
+    // set the joke to be edited to state
+    const jokeToEdit = savedJokes.find((joke) => joke.setup === setup);
+    setEditingJoke(jokeToEdit);
+  };
 
-    // Get the joke object at that index
-    const jokeToEdit = jokes[jokeIndex];
-
-    // Navigate to the edit joke screen and pass the joke data as props
-    navigation.navigate("Edit", { joke: jokeToEdit, jokeIndex });
+  const handleUpdate = () => {
+    // update the selected joke's information and save the updated list to AsyncStorage
+    const updatedJokes = savedJokes.map((joke) => {
+      if (joke.setup === editingJoke.setup) {
+        return {
+          ...joke,
+          category: newCategory,
+          setup: newSetup,
+          delivery: newDelivery,
+        };
+      }
+      return joke;
+    });
+    AsyncStorage.setItem("savedJokes", JSON.stringify(updatedJokes))
+      .then(() => {
+        setSavedJokes(updatedJokes);
+        setEditingJoke(null);
+        setNewCategory("");
+        setNewSetup("");
+        setNewDelivery("");
+      })
+      .catch((error) => console.error(error));
   };
 
   // Function to render a single saved joke
@@ -147,6 +174,23 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={{ paddingRight: 28 }}
+        onPress={() =>
+          navigation.navigate("Create", {
+            savedJokes: savedJokes,
+            setSavedJokes: setSavedJokes,
+          })
+        }
+      >
+        <Feather name="plus" size={24} color="black" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{ paddingRight: 50 }}
+        onPress={() => navigation.navigate("Saved", { savedJokes })}
+      >
+        <MaterialIcons name="favorite" size={24} color="black" />
+      </TouchableOpacity>
       <View
         style={{
           flexDirection: "row",
@@ -210,48 +254,49 @@ const HomeScreen = ({ navigation }) => {
         renderItem={renderJoke}
         keyExtractor={(item, index) => index.toString()}
       />
-      <Text>Saved Jokes</Text>
+      {/* <Text>Saved Jokes</Text>
       <FlatList
         style={{ marginTop: 20 }}
         data={savedJokes}
         renderItem={renderSavedJoke}
         keyExtractor={(item, index) => index.toString()}
-      />
-      <AddJokeForm onAddJoke={handleAddJoke} />
-
-      {/* <FlatList
-        data={savedJokes}
-        renderItem={({ item }) => (
-          <JokeItem
-            category={item.category}
-            setup={item.setup}
-            punchline={item.category}
-          />
-        )}
-        keyExtractor={(item, index) => index.toString()}
       /> */}
+      {/* <AddJokeForm onAddJoke={handleAddJoke} /> */}
+      {editingJoke && (
+        <View>
+          <TextInput value={newCategory} onChangeText={setNewCategory} />
+          <TextInput value={newSetup} onChangeText={setNewSetup} />
+          <TextInput value={newDelivery} onChangeText={setNewDelivery} />
+          <Button title="Save" onPress={handleUpdate} />
+        </View>
+      )}
     </View>
   );
 };
 
 HomeScreen.navigationOptions = ({ navigation }) => {
   return {
-    headerRight: () => (
-      <TouchableOpacity
-        style={{ paddingRight: 8 }}
-        onPress={() => navigation.navigate("Saved", { savedJokes })}
-      >
-        <MaterialIcons name="favorite" size={24} color="black" />
-      </TouchableOpacity>
-    ),
-    headerLeft: () => (
-      <TouchableOpacity
-        style={{ paddingRight: 28 }}
-        onPress={() => navigation.navigate("Create")}
-      >
-        <Feather name="plus" size={24} color="black" />
-      </TouchableOpacity>
-    ),
+    // headerRight: () => (
+    //   <TouchableOpacity
+    //     style={{ paddingRight: 8 }}
+    //     onPress={() => navigation.navigate("Saved", { savedJokes })}
+    //   >
+    //     <MaterialIcons name="favorite" size={24} color="black" />
+    //   </TouchableOpacity>
+    // ),
+    // headerLeft: () => (
+    //   <TouchableOpacity
+    //     style={{ paddingRight: 28 }}
+    //     onPress={() =>
+    //       navigation.navigate("Create", {
+    //         savedJokes: savedJokes,
+    //         setSavedJokes: setSavedJokes,
+    //       })
+    //     }
+    //   >
+    //     <Feather name="plus" size={24} color="black" />
+    //   </TouchableOpacity>
+    // ),
   };
 };
 
