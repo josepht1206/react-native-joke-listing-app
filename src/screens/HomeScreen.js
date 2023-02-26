@@ -5,30 +5,17 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  TextInput,
-  Button,
+  Alert,
 } from "react-native";
 import jokeapi from "../api/jokeapi";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
-import { EvilIcons } from "@expo/vector-icons";
-import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import SavedJokesScreen from "./SavedJokesScreen";
-import AddJokeForm from "../components/AddJokeForm";
-import EditJokeForm from "../components/EditJokeForm";
-import { createStackNavigator } from "@react-navigation/stack";
-import { NavigationContainer } from "@react-navigation/native";
-import CreateScreen from "./CreateScreen";
 
 const HomeScreen = ({ navigation }) => {
   const [jokes, setJokes] = useState([]);
   const [savedJokes, setSavedJokes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [editingJoke, setEditingJoke] = useState(null);
-  const [newCategory, setNewCategory] = useState("");
-  const [newSetup, setNewSetup] = useState("");
-  const [newDelivery, setNewDelivery] = useState("");
 
   useEffect(() => {
     jokeApi();
@@ -82,74 +69,10 @@ const HomeScreen = ({ navigation }) => {
       setSavedJokes(newSavedJokes);
       console.log("Joke saved successfully!");
       console.log(savedJokes);
+      Alert.alert("Joke saved successfully!");
     } catch (error) {
       console.log(error);
     }
-  };
-
-  const handleAddJoke = (joke) => {
-    setSavedJokes([...savedJokes, joke]);
-    console.log(savedJokes);
-    saveJoke(joke);
-  };
-
-  const handleDelete = async (setup) => {
-    setSavedJokes(savedJokes.filter((joke) => joke.setup !== setup));
-  };
-
-  const handleEdit = (setup) => {
-    // set the joke to be edited to state
-    const jokeToEdit = savedJokes.find((joke) => joke.setup === setup);
-    setEditingJoke(jokeToEdit);
-  };
-
-  const handleUpdate = () => {
-    // update the selected joke's information and save the updated list to AsyncStorage
-    const updatedJokes = savedJokes.map((joke) => {
-      if (joke.setup === editingJoke.setup) {
-        return {
-          ...joke,
-          category: newCategory,
-          setup: newSetup,
-          delivery: newDelivery,
-        };
-      }
-      return joke;
-    });
-    AsyncStorage.setItem("savedJokes", JSON.stringify(updatedJokes))
-      .then(() => {
-        setSavedJokes(updatedJokes);
-        setEditingJoke(null);
-        setNewCategory("");
-        setNewSetup("");
-        setNewDelivery("");
-      })
-      .catch((error) => console.error(error));
-  };
-
-  // Function to render a single saved joke
-  const renderSavedJoke = ({ item }) => {
-    return (
-      <View style={styles.jokesContainer}>
-        <TouchableOpacity
-          style={{ alignSelf: "flex-end" }}
-          onPress={() => handleDelete(item.setup)}
-        >
-          <EvilIcons name="trash" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{ alignSelf: "flex-start" }}
-          onPress={() => handleEdit(item.setup)}
-        >
-          <AntDesign name="edit" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.category}>Category : {item.category}</Text>
-        <Text style={styles.joke}>Setup : {item.setup}</Text>
-        <Text style={styles.joke}>Delivery : {item.delivery}</Text>
-        <Text style={styles.joke}>ID : {item.id}</Text>
-        <Text style={styles.joke}>Type : {item.type}</Text>
-      </View>
-    );
   };
 
   const renderJoke = ({ item }) => {
@@ -174,23 +97,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={{ paddingRight: 28 }}
-        onPress={() =>
-          navigation.navigate("Create", {
-            savedJokes: savedJokes,
-            setSavedJokes: setSavedJokes,
-          })
-        }
-      >
-        <Feather name="plus" size={24} color="black" />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={{ paddingRight: 50 }}
-        onPress={() => navigation.navigate("Saved", { savedJokes })}
-      >
-        <MaterialIcons name="favorite" size={24} color="black" />
-      </TouchableOpacity>
+      <Text style={styles.title}>Click category to filter : </Text>
       <View
         style={{
           flexDirection: "row",
@@ -206,10 +113,10 @@ const HomeScreen = ({ navigation }) => {
               textDecorationLine: selectedCategories.includes("Programming")
                 ? "underline"
                 : "none",
-              backgroundColor: selectedCategories.includes("Programming")
-                ? "grey"
-                : "transparent",
-              paddingLeft: 5,
+              color: selectedCategories.includes("Programming")
+                ? "red"
+                : "blue",
+              paddingLeft: 10,
               fontSize: 18,
             }}
           >
@@ -222,9 +129,7 @@ const HomeScreen = ({ navigation }) => {
               textDecorationLine: selectedCategories.includes("Misc")
                 ? "underline"
                 : "none",
-              backgroundColor: selectedCategories.includes("Misc")
-                ? "grey"
-                : "transparent",
+              color: selectedCategories.includes("Misc") ? "red" : "blue",
               fontSize: 18,
             }}
           >
@@ -237,10 +142,8 @@ const HomeScreen = ({ navigation }) => {
               textDecorationLine: selectedCategories.includes("Dark")
                 ? "underline"
                 : "none",
-              backgroundColor: selectedCategories.includes("Dark")
-                ? "grey"
-                : "transparent",
-              paddingRight: 5,
+              color: selectedCategories.includes("Dark") ? "red" : "blue",
+              paddingRight: 12,
               fontSize: 18,
             }}
           >
@@ -248,57 +151,44 @@ const HomeScreen = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
       </View>
-      <Text>Random Jokes</Text>
+      <Text style={styles.title}>Filtered Jokes :</Text>
       <FlatList
         data={filteredJokes}
         renderItem={renderJoke}
         keyExtractor={(item, index) => index.toString()}
       />
-      {/* <Text>Saved Jokes</Text>
-      <FlatList
-        style={{ marginTop: 20 }}
-        data={savedJokes}
-        renderItem={renderSavedJoke}
-        keyExtractor={(item, index) => index.toString()}
-      /> */}
-      {/* <AddJokeForm onAddJoke={handleAddJoke} /> */}
-      {editingJoke && (
-        <View>
-          <TextInput value={newCategory} onChangeText={setNewCategory} />
-          <TextInput value={newSetup} onChangeText={setNewSetup} />
-          <TextInput value={newDelivery} onChangeText={setNewDelivery} />
-          <Button title="Save" onPress={handleUpdate} />
-        </View>
-      )}
     </View>
   );
 };
 
-HomeScreen.navigationOptions = ({ navigation }) => {
-  return {
-    // headerRight: () => (
-    //   <TouchableOpacity
-    //     style={{ paddingRight: 8 }}
-    //     onPress={() => navigation.navigate("Saved", { savedJokes })}
-    //   >
-    //     <MaterialIcons name="favorite" size={24} color="black" />
-    //   </TouchableOpacity>
-    // ),
-    // headerLeft: () => (
-    //   <TouchableOpacity
-    //     style={{ paddingRight: 28 }}
-    //     onPress={() =>
-    //       navigation.navigate("Create", {
-    //         savedJokes: savedJokes,
-    //         setSavedJokes: setSavedJokes,
-    //       })
-    //     }
-    //   >
-    //     <Feather name="plus" size={24} color="black" />
-    //   </TouchableOpacity>
-    // ),
-  };
-};
+HomeScreen.navigationOptions = ({ navigation, savedJokes, setSavedJokes }) => ({
+  headerLeft: () => (
+    <TouchableOpacity
+      style={{ paddingLeft: 8 }}
+      onPress={() =>
+        navigation.navigate("Create", {
+          savedJokes: savedJokes,
+          setSavedJokes: setSavedJokes,
+        })
+      }
+    >
+      <Feather name="plus" size={24} color="black" />
+    </TouchableOpacity>
+  ),
+  headerRight: () => (
+    <TouchableOpacity
+      style={{ paddingRight: 8 }}
+      onPress={() =>
+        navigation.navigate("Saved", {
+          savedJokes: savedJokes,
+          setSavedJokes: setSavedJokes,
+        })
+      }
+    >
+      <MaterialIcons name="favorite" size={24} color="black" />
+    </TouchableOpacity>
+  ),
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -307,6 +197,7 @@ const styles = StyleSheet.create({
   },
   title: {
     margin: 10,
+    fontSize: 15,
   },
   category: {
     margin: 5,

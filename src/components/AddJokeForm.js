@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, Button } from "react-native";
+import { View, TextInput, Button, StyleSheet } from "react-native";
 
 const AddJokeForm = ({ onAddJoke }) => {
   const [category, setCategory] = useState("");
@@ -17,16 +17,19 @@ const AddJokeForm = ({ onAddJoke }) => {
   return (
     <View>
       <TextInput
+        style={styles.inputForm}
         placeholder="Enter joke category"
         value={category}
         onChangeText={setCategory}
       />
       <TextInput
+        style={styles.inputForm}
         placeholder="Enter joke setup"
         value={setup}
         onChangeText={setSetup}
       />
       <TextInput
+        style={styles.inputForm}
         placeholder="Enter joke delivery"
         value={delivery}
         onChangeText={setDelivery}
@@ -35,5 +38,11 @@ const AddJokeForm = ({ onAddJoke }) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  inputForm: {
+    margin: 5,
+  },
+});
 
 export default AddJokeForm;
