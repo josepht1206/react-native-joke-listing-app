@@ -119,8 +119,6 @@ const SavedJokesScreen = ({ navigation }) => {
         <Text style={styles.category}>Category : {item.category}</Text>
         <Text style={styles.joke}>Setup : {item.setup}</Text>
         <Text style={styles.joke}>Delivery : {item.delivery}</Text>
-        <Text style={styles.joke}>ID : {item.id}</Text>
-        <Text style={styles.joke}>Type : {item.type}</Text>
       </View>
     );
   };
