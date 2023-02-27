@@ -26,7 +26,7 @@ const HomeScreen = ({ navigation }) => {
     try {
       const response = await jokeapi.get("/Any", {
         params: {
-          amount: 5,
+          amount: 10,
           type: "twopart",
         },
       });
